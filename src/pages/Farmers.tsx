@@ -1,18 +1,27 @@
+import { useState } from 'react';
+
 import { formatCurrency } from '@/lib/format';
 import { usePaginatedList } from '@/lib/usePaginatedList';
 import type { AdminFarmer } from '@/lib/types';
 import { Avatar } from '@/components/Avatar';
+import { FilterBar } from '@/components/FilterBar';
 import { PageHeader } from '@/components/PageHeader';
 import { Pagination } from '@/components/Pagination';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 export default function FarmersPage() {
-  const { items: farmers, page, setPage, total, totalPages, pageSize, loading } = usePaginatedList<AdminFarmer>('/admin/farmers');
+  const [search, setSearch] = useState('');
+  const { items: farmers, page, setPage, total, totalPages, pageSize, loading } = usePaginatedList<AdminFarmer>(
+    '/admin/farmers',
+    20,
+    { search }
+  );
 
   return (
     <div>
       <PageHeader title="Farmers" description="Registered farmers and their reliability record" />
+      <FilterBar search={{ value: search, onChange: setSearch, placeholder: 'Search name, farm, or region...' }} />
       <Card>
         <CardContent className="p-0">
           <Table>
@@ -63,7 +72,7 @@ export default function FarmersPage() {
               {!loading && farmers.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
-                    No farmers registered yet.
+                    {search ? 'No farmers match your search.' : 'No farmers registered yet.'}
                   </TableCell>
                 </TableRow>
               )}

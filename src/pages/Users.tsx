@@ -8,6 +8,7 @@ import { usePaginatedList } from '@/lib/usePaginatedList';
 import { isValidPhone } from '@/lib/validation';
 import type { AdminUser, CreateUserResult, ProvisionableRole, UpdateUserInput } from '@/lib/types';
 import { Avatar } from '@/components/Avatar';
+import { FilterBar } from '@/components/FilterBar';
 import { PageHeader } from '@/components/PageHeader';
 import { Pagination } from '@/components/Pagination';
 import { StatusPill } from '@/components/StatusPill';
@@ -34,7 +35,13 @@ export default function UsersPage() {
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
 
-  const { items: users, page, setPage, total, totalPages, pageSize, loading, reload } = usePaginatedList<AdminUser>('/admin/users');
+  const [search, setSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState('');
+  const { items: users, page, setPage, total, totalPages, pageSize, loading, reload } = usePaginatedList<AdminUser>(
+    '/admin/users',
+    20,
+    { search, role: roleFilter }
+  );
 
   const [showForm, setShowForm] = useState(false);
   const [result, setResult] = useState<CreateUserResult | null>(null);
@@ -282,6 +289,18 @@ export default function UsersPage() {
         </div>
       )}
 
+      <FilterBar
+        search={{ value: search, onChange: setSearch, placeholder: 'Search name or email...' }}
+        selects={[
+          {
+            value: roleFilter,
+            onChange: setRoleFilter,
+            placeholder: 'All roles',
+            options: ['buyer', ...PROVISIONABLE_ROLES].map((r) => ({ value: r, label: roleLabel(r) })),
+          },
+        ]}
+      />
+
       <Card>
         <CardContent className="p-0">
           <Table>
@@ -369,7 +388,7 @@ export default function UsersPage() {
               {!loading && users.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={isAdmin ? 7 : 6} className="py-8 text-center text-muted-foreground">
-                    No users yet.
+                    {search || roleFilter ? 'No users match your filters.' : 'No users yet.'}
                   </TableCell>
                 </TableRow>
               )}

@@ -1,6 +1,9 @@
+import { useState } from 'react';
+
 import { formatDate } from '@/lib/format';
 import { usePaginatedList } from '@/lib/usePaginatedList';
 import type { AdminDelivery } from '@/lib/types';
+import { FilterBar } from '@/components/FilterBar';
 import { PageHeader } from '@/components/PageHeader';
 import { Pagination } from '@/components/Pagination';
 import { StatusPill } from '@/components/StatusPill';
@@ -8,11 +11,35 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 export default function DeliveriesPage() {
-  const { items: deliveries, page, setPage, total, totalPages, pageSize, loading } = usePaginatedList<AdminDelivery>('/admin/deliveries');
+  const [search, setSearch] = useState('');
+  const [status, setStatus] = useState('');
+  const { items: deliveries, page, setPage, total, totalPages, pageSize, loading } = usePaginatedList<AdminDelivery>(
+    '/admin/deliveries',
+    20,
+    { search, status }
+  );
 
   return (
     <div>
       <PageHeader title="Deliveries" description="Pickup and delivery status for every order" />
+      <FilterBar
+        search={{ value: search, onChange: setSearch, placeholder: 'Search order code or driver...' }}
+        selects={[
+          {
+            value: status,
+            onChange: setStatus,
+            placeholder: 'All statuses',
+            options: [
+              { value: 'pending', label: 'Pending' },
+              { value: 'assigned', label: 'Assigned' },
+              { value: 'picked_up', label: 'Picked Up' },
+              { value: 'in_transit', label: 'In Transit' },
+              { value: 'delivered', label: 'Delivered' },
+              { value: 'failed', label: 'Failed' },
+            ],
+          },
+        ]}
+      />
       <Card>
         <CardContent className="p-0">
           <Table>
@@ -52,7 +79,7 @@ export default function DeliveriesPage() {
               {!loading && deliveries.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
-                    No deliveries yet.
+                    {search || status ? 'No deliveries match your filters.' : 'No deliveries yet.'}
                   </TableCell>
                 </TableRow>
               )}

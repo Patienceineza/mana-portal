@@ -1,18 +1,27 @@
+import { useState } from 'react';
+
 import { formatCurrency } from '@/lib/format';
 import { usePaginatedList } from '@/lib/usePaginatedList';
 import type { AdminBuyer } from '@/lib/types';
 import { Avatar } from '@/components/Avatar';
+import { FilterBar } from '@/components/FilterBar';
 import { PageHeader } from '@/components/PageHeader';
 import { Pagination } from '@/components/Pagination';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 export default function BuyersPage() {
-  const { items: buyers, page, setPage, total, totalPages, pageSize, loading } = usePaginatedList<AdminBuyer>('/admin/buyers');
+  const [search, setSearch] = useState('');
+  const { items: buyers, page, setPage, total, totalPages, pageSize, loading } = usePaginatedList<AdminBuyer>(
+    '/admin/buyers',
+    20,
+    { search }
+  );
 
   return (
     <div>
       <PageHeader title="Buyers" description="Registered buyers and their order history" />
+      <FilterBar search={{ value: search, onChange: setSearch, placeholder: 'Search name or business...' }} />
       <Card>
         <CardContent className="p-0">
           <Table>
@@ -62,7 +71,7 @@ export default function BuyersPage() {
               {!loading && buyers.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
-                    No buyers registered yet.
+                    {search ? 'No buyers match your search.' : 'No buyers registered yet.'}
                   </TableCell>
                 </TableRow>
               )}

@@ -1,6 +1,9 @@
+import { useState } from 'react';
+
 import { formatCurrency, formatDate } from '@/lib/format';
 import { usePaginatedList } from '@/lib/usePaginatedList';
 import type { AdminOrder } from '@/lib/types';
+import { FilterBar } from '@/components/FilterBar';
 import { PageHeader } from '@/components/PageHeader';
 import { Pagination } from '@/components/Pagination';
 import { StatusPill } from '@/components/StatusPill';
@@ -9,12 +12,48 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 
 const STAGE_LABELS = ['Order Confirmed', 'Picked at Farm', 'In Transit', 'Delivered'];
 
+const DELIVERY_STATUS_OPTIONS = [
+  { value: 'pending', label: 'Pending' },
+  { value: 'assigned', label: 'Assigned' },
+  { value: 'picked_up', label: 'Picked Up' },
+  { value: 'in_transit', label: 'In Transit' },
+  { value: 'delivered', label: 'Delivered' },
+  { value: 'failed', label: 'Failed' },
+];
+
 export default function OrdersPage() {
-  const { items: orders, page, setPage, total, totalPages, pageSize, loading } = usePaginatedList<AdminOrder>('/admin/orders');
+  const [search, setSearch] = useState('');
+  const [paymentStatus, setPaymentStatus] = useState('');
+  const [deliveryStatus, setDeliveryStatus] = useState('');
+  const { items: orders, page, setPage, total, totalPages, pageSize, loading } = usePaginatedList<AdminOrder>(
+    '/admin/orders',
+    20,
+    { search, paymentStatus, deliveryStatus }
+  );
 
   return (
     <div>
       <PageHeader title="Orders" description="All confirmed buyer orders, from creation to settlement" />
+      <FilterBar
+        search={{ value: search, onChange: setSearch, placeholder: 'Search order code or buyer...' }}
+        selects={[
+          {
+            value: paymentStatus,
+            onChange: setPaymentStatus,
+            placeholder: 'All payment statuses',
+            options: [
+              { value: 'paid', label: 'Paid' },
+              { value: 'unpaid', label: 'Unpaid' },
+            ],
+          },
+          {
+            value: deliveryStatus,
+            onChange: setDeliveryStatus,
+            placeholder: 'All delivery statuses',
+            options: DELIVERY_STATUS_OPTIONS,
+          },
+        ]}
+      />
       <Card>
         <CardContent className="p-0">
           <Table>
@@ -64,7 +103,7 @@ export default function OrdersPage() {
               {!loading && orders.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
-                    No orders placed yet.
+                    {search || paymentStatus || deliveryStatus ? 'No orders match your filters.' : 'No orders placed yet.'}
                   </TableCell>
                 </TableRow>
               )}

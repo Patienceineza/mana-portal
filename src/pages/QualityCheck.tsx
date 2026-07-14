@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 
 import { api, ApiError } from '@/lib/api';
 import type { QcInspection } from '@/lib/types';
+import { FilterBar } from '@/components/FilterBar';
 import { PageHeader } from '@/components/PageHeader';
 import { StatusPill } from '@/components/StatusPill';
 import { Button } from '@/components/ui/button';
@@ -18,6 +19,7 @@ const GRADES: Array<'A' | 'B' | 'C'> = ['A', 'B', 'C'];
 export default function QualityCheckPage() {
   const [inspections, setInspections] = useState<QcInspection[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
   const [gradingId, setGradingId] = useState<string | null>(null);
   const [actualWeight, setActualWeight] = useState('');
   const [decision, setDecision] = useState<'accept' | 'reject' | null>(null);
@@ -28,12 +30,13 @@ export default function QualityCheckPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await api.get<QcInspection[]>('/qc/inspections');
+      const query = search ? `?search=${encodeURIComponent(search)}` : '';
+      const res = await api.get<QcInspection[]>(`/qc/inspections${query}`);
       setInspections(res);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [search]);
 
   useEffect(() => {
     load();
@@ -80,6 +83,8 @@ export default function QualityCheckPage() {
   return (
     <div>
       <PageHeader title="Quality Check" description="Review production batches and assign a grade before they go to buyers" />
+
+      <FilterBar search={{ value: search, onChange: setSearch, placeholder: 'Search farm or crop...' }} />
 
       <Card>
         <CardContent className="p-0">

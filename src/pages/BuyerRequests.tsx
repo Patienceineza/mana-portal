@@ -1,6 +1,9 @@
+import { useState } from 'react';
+
 import { formatDate } from '@/lib/format';
 import { usePaginatedList } from '@/lib/usePaginatedList';
 import type { AdminBuyerRequest } from '@/lib/types';
+import { FilterBar } from '@/components/FilterBar';
 import { PageHeader } from '@/components/PageHeader';
 import { Pagination } from '@/components/Pagination';
 import { StatusPill } from '@/components/StatusPill';
@@ -8,11 +11,45 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 export default function BuyerRequestsPage() {
-  const { items: requests, page, setPage, total, totalPages, pageSize, loading } = usePaginatedList<AdminBuyerRequest>('/admin/buyer-requests');
+  const [search, setSearch] = useState('');
+  const [status, setStatus] = useState('');
+  const [grade, setGrade] = useState('');
+  const { items: requests, page, setPage, total, totalPages, pageSize, loading } = usePaginatedList<AdminBuyerRequest>(
+    '/admin/buyer-requests',
+    20,
+    { search, status, grade }
+  );
 
   return (
     <div>
       <PageHeader title="Buyer requests" description="Demand submitted by buyers, awaiting supply matching" />
+      <FilterBar
+        search={{ value: search, onChange: setSearch, placeholder: 'Search crop or buyer...' }}
+        selects={[
+          {
+            value: status,
+            onChange: setStatus,
+            placeholder: 'All statuses',
+            options: [
+              { value: 'open', label: 'Open' },
+              { value: 'matched', label: 'Matched' },
+              { value: 'fulfilled', label: 'Fulfilled' },
+              { value: 'cancelled', label: 'Cancelled' },
+            ],
+          },
+          {
+            value: grade,
+            onChange: setGrade,
+            placeholder: 'All grades',
+            options: [
+              { value: 'A', label: 'Grade A' },
+              { value: 'B', label: 'Grade B' },
+              { value: 'C', label: 'Grade C' },
+              { value: 'any', label: 'Any' },
+            ],
+          },
+        ]}
+      />
       <Card>
         <CardContent className="p-0">
           <Table>
@@ -60,7 +97,7 @@ export default function BuyerRequestsPage() {
               {!loading && requests.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
-                    No buyer requests submitted yet.
+                    {search || status || grade ? 'No buyer requests match your filters.' : 'No buyer requests submitted yet.'}
                   </TableCell>
                 </TableRow>
               )}
